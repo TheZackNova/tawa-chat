@@ -445,7 +445,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
         setTimeout(async () => {
             try {
                 const memoryModule = await import('../../lib/memory');
-                const latestMessages = store.sessions.find(s => s.id === store.currentSessionId)?.messages || [];
+                const latestMessages = store.sessions.find(s => s.id === currentSession.id)?.messages || [];
                 
                 // Unified memory extraction - 1 API Call vs 3
                 await memoryModule.unifiedMemoryExtraction(
@@ -645,7 +645,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
       </div>
       <h2 className="mb-2 text-3xl font-bold text-pink-600 dark:text-pink-400 font-sans tracking-tight">Tawa Chat Xin Chào! 🌸</h2>
       <p className="max-w-md text-pink-500/80 dark:text-pink-300/70 text-lg italic mb-8">
-        "Yuri Is Love, Yuri Is Life" 💕
+        "Harem Is Life, Ecchi Is Love" 💕
       </p>
 
       <p className="max-w-md text-pink-400 dark:text-pink-500/60 mt-4 text-sm">
