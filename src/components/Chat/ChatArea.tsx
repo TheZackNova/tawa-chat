@@ -6,7 +6,7 @@ import { Menu, Download, Github, Zap, Brain } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { exportToMarkdown, exportToWord, exportToPDF, exportToGithubGist } from '../../lib/export';
+import { exportToMarkdown, exportToWord, exportToPDF, exportToGithubGist, exportToJSON } from '../../lib/export';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { processContextWithRAG, processHistoryWithRAG } from '../../lib/rag';
 import { fetchWebpages } from '../../lib/webScraper';
@@ -531,12 +531,13 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
     }
   };
 
-  const handleExport = async (type: 'md' | 'pdf' | 'docx' | 'gist') => {
+  const handleExport = async (type: 'md' | 'pdf' | 'docx' | 'gist' | 'json') => {
     if (!currentSession) return;
     try {
       if (type === 'md') exportToMarkdown(currentSession);
-      if (type === 'pdf') exportToPDF(currentSession);
-      if (type === 'docx') exportToWord(currentSession);
+      if (type === 'json') exportToJSON(currentSession);
+      if (type === 'pdf') await exportToPDF(currentSession);
+      if (type === 'docx') await exportToWord(currentSession);
       if (type === 'gist') {
         const url = await exportToGithubGist(currentSession, store.githubToken);
         window.open(url, '_blank');
@@ -579,6 +580,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
               <button onClick={() => handleExport('md')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Markdown 📝</button>
               <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất PDF 📄</button>
               <button onClick={() => handleExport('docx')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Word 📘</button>
+              <button onClick={() => handleExport('json')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất JSON 🗃️</button>
               <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
               <button onClick={() => handleExport('gist')} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">
                 <Github className="h-4 w-4" /> Export to Gist 🐙
@@ -627,6 +629,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
               <button onClick={() => handleExport('md')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Markdown 📝</button>
               <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất PDF 📄</button>
               <button onClick={() => handleExport('docx')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Word 📘</button>
+              <button onClick={() => handleExport('json')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất JSON 🗃️</button>
               <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
               <button onClick={() => handleExport('gist')} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">
                 <Github className="h-4 w-4" /> Export to Gist 🐙

@@ -3,6 +3,9 @@ import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 
+const escHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 export const exportToMarkdown = (session: ChatSession) => {
   let md = `# ${session.title}\n\n`;
   session.messages.forEach(m => {
@@ -97,47 +100,70 @@ export const exportToWord = async (session: ChatSession) => {
   saveAs(blob, `${session.title}.docx`);
 };
 
-export const exportToPDF = (session: ChatSession) => {
-  // A simple PDF export using jsPDF text. For complex UI, html2canvas is better,
-  // but for chat text, this is cleaner.
-  const doc = new jsPDF();
-  let y = 20;
-  const pageHeight = doc.internal.pageSize.height;
-  const margin = 20;
-  const maxWidth = doc.internal.pageSize.width - margin * 2;
+export const exportToPDF = async (session: ChatSession) => {
+  // Use html2canvas to render Vietnamese text correctly (jsPDF built-in fonts lack Vietnamese)
+  const container = document.createElement('div');
+  container.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:794px;padding:48px 60px;background:#ffffff;' +
+    'font-family:"Segoe UI",Arial,sans-serif;box-sizing:border-box;color:#1a1a1a;';
 
-  doc.setFontSize(16);
-  doc.text(session.title, margin, y);
-  y += 15;
-
-  doc.setFontSize(12);
-  
+  let html = `<h1 style="font-size:18px;margin:0 0 24px;color:#1a1a1a;">${escHtml(session.title)}</h1>`;
   session.messages.forEach(m => {
-    const role = m.role === 'user' ? 'Bạn:' : 'Trợ lý AI:';
-    doc.setFont('helvetica', 'bold');
-    
-    if (y > pageHeight - 20) {
-      doc.addPage();
-      y = 20;
-    }
-    
-    doc.text(role, margin, y);
-    y += 7;
-    
-    doc.setFont('helvetica', 'normal');
-    const lines = doc.splitTextToSize(m.content, maxWidth);
-    
-    lines.forEach((line: string) => {
-      if (y > pageHeight - 20) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(line, margin, y);
-      y += 7;
-    });
-    
-    y += 5;
+    const role = m.role === 'user' ? 'Bạn' : 'Trợ lý AI';
+    const color = m.role === 'user' ? '#be185d' : '#1d4ed8';
+    html += `<div style="margin-bottom:18px;">
+      <div style="font-weight:700;color:${color};font-size:12px;margin-bottom:4px;">${role}</div>
+      <div style="font-size:12px;line-height:1.75;white-space:pre-wrap;">${escHtml(m.content)}</div>
+    </div>
+    <hr style="border:0;border-top:1px solid #e5e7eb;margin:14px 0;">`;
   });
 
-  doc.save(`${session.title}.pdf`);
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    const html2canvasModule = await import('html2canvas');
+    const canvas = await html2canvasModule.default(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgH = (canvas.height / canvas.width) * pageW * (canvas.width / (canvas.width / 2));
+    const scaledH = (canvas.height / 2) * (pageW / (canvas.width / 2));
+
+    let heightLeft = scaledH;
+    let posY = 0;
+    pdf.addImage(imgData, 'JPEG', 0, posY, pageW, scaledH);
+    heightLeft -= pageH;
+
+    while (heightLeft > 0) {
+      posY -= pageH;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, posY, pageW, scaledH);
+      heightLeft -= pageH;
+    }
+
+    pdf.save(`${session.title}.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
+};
+
+export const exportToJSON = (session: ChatSession) => {
+  const data = {
+    title: session.title,
+    exportedAt: new Date().toISOString(),
+    messages: session.messages.map(m => ({
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp,
+    })),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  saveAs(blob, `${session.title}.json`);
 };
