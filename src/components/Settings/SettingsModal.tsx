@@ -18,6 +18,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [personality, setPersonality] = useState(store.personality);
   const [currentModel, setCurrentModel] = useState(store.currentModel);
   const [translationEnabled, setTranslationEnabled] = useState(store.translationEnabled);
+  const [smartMemoryEnabled, setSmartMemoryEnabled] = useState(store.smartMemoryEnabled);
   const [githubToken, setGithubToken] = useState(store.githubToken);
   const [performanceModel, setPerformanceModel] = useState(store.performanceModel);
   const [reasoningModel, setReasoningModel] = useState(store.reasoningModel);
@@ -38,6 +39,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setPersonality(store.personality);
       setCurrentModel(store.currentModel);
       setTranslationEnabled(store.translationEnabled);
+      setSmartMemoryEnabled(store.smartMemoryEnabled);
       setGithubToken(store.githubToken);
       setPerformanceModel(store.performanceModel);
       setReasoningModel(store.reasoningModel);
@@ -55,6 +57,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       proxyUrl,
       personality,
       translationEnabled,
+      smartMemoryEnabled,
       githubToken,
       performanceModel,
       reasoningModel,
@@ -255,14 +258,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         <div className="flex items-center justify-between pt-4 border-t border-pink-200 dark:border-pink-900/30">
           <label className="text-sm font-medium text-pink-700 dark:text-pink-300">Dịch thuật thời gian thực 🌐</label>
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={translationEnabled}
             onChange={(e) => setTranslationEnabled(e.target.checked)}
             className="h-4 w-4 rounded border-pink-300 text-pink-500 focus:ring-pink-500 dark:border-pink-700 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus:ring-pink-400"
           />
         </div>
         <p className="text-xs text-pink-500/70 dark:text-pink-400/70 italic">Nếu bật, Tawa Bot sẽ tự động dịch câu trả lời sang tiếng Việt nếu ngôn ngữ gốc khác nha~</p>
+
+        <div className="flex items-center justify-between pt-4 border-t border-pink-200 dark:border-pink-900/30">
+          <label className="text-sm font-medium text-pink-700 dark:text-pink-300">Smart Memory (Bộ nhớ xuyên phiên) 🧠</label>
+          <input
+            type="checkbox"
+            checked={smartMemoryEnabled}
+            onChange={(e) => setSmartMemoryEnabled(e.target.checked)}
+            className="h-4 w-4 rounded border-pink-300 text-pink-500 focus:ring-pink-500 dark:border-pink-700 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus:ring-pink-400"
+          />
+        </div>
+        <p className="text-xs text-pink-500/70 dark:text-pink-400/70 italic">Nếu bật, Tawa Bot sẽ nhớ thông tin từ các đoạn chat cũ và dùng lại trong cuộc trò chuyện mới. Tắt để mỗi chat hoàn toàn độc lập nha~</p>
 
       </div>
       

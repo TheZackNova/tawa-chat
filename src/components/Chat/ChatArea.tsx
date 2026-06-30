@@ -405,7 +405,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
 
     // Smart Memory Injection
     let smartMemoryContext = '';
-    if (store.pin) {
+    if (store.pin && store.smartMemoryEnabled) {
         try {
             const memoryModule = await import('../../lib/memory');
             smartMemoryContext = await memoryModule.getRelevantContext(content, store.pin, 5);
@@ -441,7 +441,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
     await generateResponse(apiMessages, assistantMessageId);
 
     // Run extraction in background after response
-    if (store.pin && store.apiKey && store.proxyUrl && currentSession && messages.length > 0) {
+    if (store.pin && store.smartMemoryEnabled && store.apiKey && store.proxyUrl && currentSession && messages.length > 0) {
         setTimeout(async () => {
             try {
                 const memoryModule = await import('../../lib/memory');
@@ -494,7 +494,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
     );
 
     let smartMemoryContext = '';
-    if (store.pin && promptForRAG) {
+    if (store.pin && store.smartMemoryEnabled && promptForRAG) {
         try {
             const memoryModule = await import('../../lib/memory');
             smartMemoryContext = await memoryModule.getRelevantContext(promptForRAG, store.pin, 5);
