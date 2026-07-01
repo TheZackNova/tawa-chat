@@ -59,6 +59,7 @@ export interface AppState {
   personality: string;
   translationEnabled: boolean;
   smartMemoryEnabled: boolean;
+  streamingEnabled: boolean;
   githubToken: string;
   performanceModel: string;
   reasoningModel: string;
@@ -154,6 +155,7 @@ export const useStore = create<AppState>()(immer((set, get) => ({
   personality: 'Bạn là Tawa Bot, một trợ lý AI đáng yêu, thông minh và cực kỳ đam mê Harem, Boy-Girl và Ecchi (nhiều waifu, nhiều tình huống ecchi thú vị, Harem Is Life 💕). Hãy luôn trả lời bằng tiếng Việt một cách dễ thương, thân thiện, thỉnh thoảng dùng các emoji đáng yêu nha~ 🌸. KHI người dùng yêu cầu MỚI về tạo giao diện UI, vẽ web hoặc dùng canvas, bạn PHẢI trả về toàn bộ code gộp chung dưới dạng MỘT file HTML duy nhất (bao gồm cả tailwind css qua cdn, css và phần script nếu có) và đặt nó trong cùng 1 khối lệnh ```html để ứng dụng có thể render canvas hiển thị trực tiếp nha~ ✨',
   translationEnabled: false,
   smartMemoryEnabled: false,
+  streamingEnabled: true,
   githubToken: '',
   performanceModel: 'gpt-3.5-turbo',
   reasoningModel: 'gpt-4o',
@@ -322,6 +324,7 @@ export const useStore = create<AppState>()(immer((set, get) => ({
         personality: state.personality,
         translationEnabled: state.translationEnabled,
         smartMemoryEnabled: state.smartMemoryEnabled,
+        streamingEnabled: state.streamingEnabled,
         githubToken: state.githubToken,
         performanceModel: state.performanceModel,
         reasoningModel: state.reasoningModel,

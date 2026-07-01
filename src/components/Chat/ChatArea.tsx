@@ -119,7 +119,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
           body: JSON.stringify({
             model: modelToUse || store.currentModel,
             messages: apiMessages,
-            stream: true,
+            stream: store.streamingEnabled,
             max_tokens: store.maxResponseLength || 8192,
             temperature: store.temperature ?? 0.7,
             top_p: store.topP ?? 0.95,
@@ -141,18 +141,87 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
           throw new Error(`Lỗi API: ${response.status} ${errorText}`);
         }
 
+        let startTime = Date.now();
+        let firstTokenReceived = false;
+
+        const currentToolCalls: Record<number, any> = {};
+        let requiresToolExecution = false;
+        let currentAssistantMessageContent = '';
+
+        const finalModel = modelToUse || store.currentModel;
+        const computeCost = (content: string) => {
+          const tokensApproximation = Math.ceil(content.length / 3.5);
+          let costPer1M = 0;
+          if (finalModel.includes('gpt-4') || finalModel.includes('o1')) costPer1M = 5;
+          else if (finalModel.includes('gpt-3.5') || finalModel.includes('claude-3-haiku')) costPer1M = 0.5;
+          else costPer1M = 1;
+          return { tokens: tokensApproximation, cost: (tokensApproximation / 1000000) * costPer1M };
+        };
+
+        if (!store.streamingEnabled) {
+          // Non-streaming: single JSON response
+          const data = await response.json();
+          const message = data.choices?.[0]?.message;
+
+          if (iteration === 1) firstTokenTime = Date.now() - startTime;
+
+          if (message?.tool_calls) {
+            for (const tc of message.tool_calls) {
+              const index = message.tool_calls.indexOf(tc);
+              currentToolCalls[index] = {
+                id: tc.id || '',
+                name: tc.function?.name || '',
+                arguments: tc.function?.arguments || ''
+              };
+            }
+          }
+
+          if (message?.content) {
+            currentAssistantMessageContent += message.content;
+            assistantContent += message.content;
+            const { tokens, cost } = computeCost(assistantContent);
+            store.updateMessage(
+              assistantMessageId,
+              assistantContent,
+              { ttft: iteration === 1 ? firstTokenTime : undefined, tokens, cost, isThinking: false },
+              false
+            );
+          }
+
+          if (data.choices?.[0]?.finish_reason === 'tool_calls') {
+            requiresToolExecution = true;
+          }
+        } else {
+
         if (!response.body) throw new Error('Không có dữ liệu trả về');
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
         let done = false;
         let buffer = '';
-        let startTime = Date.now();
-        let firstTokenReceived = false;
-        
-        const currentToolCalls: Record<number, any> = {};
-        let requiresToolExecution = false;
-        let currentAssistantMessageContent = '';
+
+        // Throttle UI updates during streaming. Rendering the full (growing)
+        // message on every token forces react-markdown/syntax-highlighter to
+        // re-parse and the virtualizer to re-measure the entire content each
+        // time — O(n^2) that freezes the main thread on long answers. We
+        // accumulate every token but only push to the UI at most every
+        // UI_FLUSH_MS; the final content is always flushed after the loop.
+        const UI_FLUSH_MS = 120;
+        let lastUiFlush = 0;
+        const flushUi = () => {
+          const { tokens, cost } = computeCost(assistantContent);
+          store.updateMessage(
+            assistantMessageId,
+            assistantContent,
+            {
+              ttft: iteration === 1 ? firstTokenTime : undefined,
+              tokens,
+              cost,
+              isThinking: false
+            },
+            false // Do not save to DB eagerly during streaming
+          );
+        };
 
         while (!done) {
           const { value, done: readerDone } = await reader.read();
@@ -189,28 +258,14 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
                     
                     currentAssistantMessageContent += delta.content;
                     assistantContent += delta.content;
-                    
-                    const tokensApproximation = Math.ceil(assistantContent.length / 3.5);
-                    let costPer1M = 0;
-                    const finalModel = modelToUse || store.currentModel;
-                    if (finalModel.includes('gpt-4') || finalModel.includes('o1')) costPer1M = 5;
-                    else if (finalModel.includes('gpt-3.5') || finalModel.includes('claude-3-haiku')) costPer1M = 0.5;
-                    else costPer1M = 1;
-                    const estimatedCost = (tokensApproximation / 1000000) * costPer1M;
 
-                    store.updateMessage(
-                       assistantMessageId, 
-                       assistantContent, 
-                       { 
-                         ttft: iteration === 1 ? firstTokenTime : undefined,
-                         tokens: tokensApproximation,
-                         cost: estimatedCost,
-                         isThinking: false 
-                       },
-                       false // Do not save to DB eagerly during streaming
-                    );
+                    const now = Date.now();
+                    if (now - lastUiFlush >= UI_FLUSH_MS) {
+                      lastUiFlush = now;
+                      flushUi();
+                    }
                   }
-                  
+
                   if (data.choices[0]?.finish_reason === 'tool_calls') {
                      requiresToolExecution = true;
                   }
@@ -221,6 +276,10 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
             }
           }
         }
+
+        // Flush any content accumulated since the last throttled update.
+        flushUi();
+        } // end streaming branch
 
         if (requiresToolExecution) {
             const toolCallObjects = Object.values(currentToolCalls);

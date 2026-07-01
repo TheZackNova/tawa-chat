@@ -19,6 +19,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [currentModel, setCurrentModel] = useState(store.currentModel);
   const [translationEnabled, setTranslationEnabled] = useState(store.translationEnabled);
   const [smartMemoryEnabled, setSmartMemoryEnabled] = useState(store.smartMemoryEnabled);
+  const [streamingEnabled, setStreamingEnabled] = useState(store.streamingEnabled);
   const [githubToken, setGithubToken] = useState(store.githubToken);
   const [performanceModel, setPerformanceModel] = useState(store.performanceModel);
   const [reasoningModel, setReasoningModel] = useState(store.reasoningModel);
@@ -40,6 +41,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setCurrentModel(store.currentModel);
       setTranslationEnabled(store.translationEnabled);
       setSmartMemoryEnabled(store.smartMemoryEnabled);
+      setStreamingEnabled(store.streamingEnabled);
       setGithubToken(store.githubToken);
       setPerformanceModel(store.performanceModel);
       setReasoningModel(store.reasoningModel);
@@ -58,6 +60,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       personality,
       translationEnabled,
       smartMemoryEnabled,
+      streamingEnabled,
       githubToken,
       performanceModel,
       reasoningModel,
@@ -277,6 +280,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           />
         </div>
         <p className="text-xs text-pink-500/70 dark:text-pink-400/70 italic">Nếu bật, Tawa Bot sẽ nhớ thông tin từ các đoạn chat cũ và dùng lại trong cuộc trò chuyện mới. Tắt để mỗi chat hoàn toàn độc lập nha~</p>
+
+        <div className="flex items-center justify-between pt-4 border-t border-pink-200 dark:border-pink-900/30">
+          <label className="text-sm font-medium text-pink-700 dark:text-pink-300">Streaming phản hồi ⚡</label>
+          <input
+            type="checkbox"
+            checked={streamingEnabled}
+            onChange={(e) => setStreamingEnabled(e.target.checked)}
+            title="Streaming phản hồi"
+            className="h-4 w-4 rounded border-pink-300 text-pink-500 focus:ring-pink-500 dark:border-pink-700 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus:ring-pink-400"
+          />
+        </div>
+        <p className="text-xs text-pink-500/70 dark:text-pink-400/70 italic">Nếu bật, câu trả lời sẽ hiển thị từng chữ theo thời gian thực. Tắt để chờ nhận toàn bộ phản hồi một lần (hữu ích với một số proxy không hỗ trợ streaming).</p>
 
       </div>
       
