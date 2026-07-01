@@ -87,6 +87,7 @@ export interface AppState {
   sessions: ChatSession[];
   currentSessionId: string | null;
   createSession: () => void;
+  importSession: (title: string, messages: Omit<Message, 'id' | 'variants' | 'currentVariantIndex' | 'isHidden' | 'tokens' | 'cost' | 'isThinking'>[]) => void;
   selectSession: (id: string) => void;
   deleteSession: (id: string) => void;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'> & { id?: string }) => void;
@@ -376,6 +377,31 @@ export const useStore = create<AppState>()(immer((set, get) => ({
     const state = get();
     if (state.pin) {
        saveSession({ id: newSession.id, title: newSession.title, updatedAt: newSession.updatedAt }, state.pin).catch(console.error);
+    }
+  },
+
+  importSession: (title, messages) => {
+    const sessionId = uuidv4();
+    const now = Date.now();
+    const fullMessages: Message[] = messages.map(m => ({
+      ...m,
+      id: uuidv4(),
+      timestamp: m.timestamp ?? now,
+    }));
+    const newSession: ChatSession = {
+      id: sessionId,
+      title,
+      messages: fullMessages,
+      updatedAt: now,
+    };
+    set((state) => ({
+      sessions: [newSession, ...state.sessions],
+      currentSessionId: sessionId,
+    }));
+    const state = get();
+    if (state.pin) {
+      saveSession({ id: sessionId, title, updatedAt: now }, state.pin).catch(console.error);
+      fullMessages.forEach(m => saveMessage({ ...(m as any), sessionId }, state.pin!).catch(console.error));
     }
   },
 

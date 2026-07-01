@@ -6,7 +6,7 @@ import { Menu, Download, Github, Zap, Brain } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { exportToMarkdown, exportToWord, exportToPDF, exportToGithubGist, exportToJSON } from '../../lib/export';
+import { exportToMarkdown, exportToWord, exportToPDF, exportToGithubGist, exportToJSON, importFromJSON } from '../../lib/export';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { processContextWithRAG, processHistoryWithRAG } from '../../lib/rag';
 import { fetchWebpages } from '../../lib/webScraper';
@@ -25,6 +25,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -608,6 +609,20 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
     setExportMenuOpen(false);
   };
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      const { title, messages } = await importFromJSON(file);
+      store.importSession(title, messages as any);
+    } catch (err: any) {
+      setErrorMessage(err.message);
+      setErrorModalOpen(true);
+    }
+    setExportMenuOpen(false);
+  };
+
   const handleGenerateTests = (code: string, language: string) => {
     const prompt = `Viết unit test chi tiết cho đoạn mã ${language} sau:\n\n\`\`\`${language}\n${code}\n\`\`\``;
     handleSend(prompt, []);
@@ -623,6 +638,7 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
 
   return (
     <div className="flex h-full flex-col bg-pink-50/30 dark:bg-zinc-950">
+      <input ref={importInputRef} type="file" accept=".json" aria-label="Nhập file JSON" className="hidden" onChange={handleImport} />
       <header className="flex h-14 items-center justify-between px-4 border-b border-pink-200 dark:border-pink-900/30 md:hidden bg-pink-100/50 dark:bg-pink-950/20">
         <button onClick={onOpenSidebar} className="p-2 -ml-2 rounded-md hover:bg-pink-200 dark:hover:bg-pink-900/50">
           <Menu className="h-5 w-5 text-pink-600 dark:text-pink-400" />
@@ -640,6 +656,8 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
               <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất PDF 📄</button>
               <button onClick={() => handleExport('docx')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Word 📘</button>
               <button onClick={() => handleExport('json')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất JSON 🗃️</button>
+              <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
+              <button onClick={() => importInputRef.current?.click()} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Nhập JSON 📂</button>
               <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
               <button onClick={() => handleExport('gist')} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">
                 <Github className="h-4 w-4" /> Export to Gist 🐙
@@ -689,6 +707,8 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
               <button onClick={() => handleExport('pdf')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất PDF 📄</button>
               <button onClick={() => handleExport('docx')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất Word 📘</button>
               <button onClick={() => handleExport('json')} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Xuất JSON 🗃️</button>
+              <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
+              <button onClick={() => importInputRef.current?.click()} className="block w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">Nhập JSON 📂</button>
               <div className="h-px bg-pink-100 dark:bg-pink-900/30 my-1" />
               <button onClick={() => handleExport('gist')} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-colors">
                 <Github className="h-4 w-4" /> Export to Gist 🐙

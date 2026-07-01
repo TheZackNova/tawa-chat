@@ -167,3 +167,27 @@ export const exportToJSON = (session: ChatSession) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
   saveAs(blob, `${session.title}.json`);
 };
+
+export const importFromJSON = (file: File): Promise<{ title: string; messages: { role: string; content: string; timestamp: number }[] }> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (!data.title || !Array.isArray(data.messages)) {
+          throw new Error('File JSON không hợp lệ: thiếu trường title hoặc messages.');
+        }
+        for (const m of data.messages) {
+          if (!m.role || typeof m.content !== 'string') {
+            throw new Error('File JSON không hợp lệ: mỗi tin nhắn phải có role và content.');
+          }
+        }
+        resolve({ title: data.title, messages: data.messages });
+      } catch (err: any) {
+        reject(new Error(err.message || 'Không thể đọc file JSON.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Lỗi khi đọc file.'));
+    reader.readAsText(file, 'utf-8');
+  });
+};
