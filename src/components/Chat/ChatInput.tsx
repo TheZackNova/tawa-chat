@@ -3,6 +3,7 @@ import { Send, Square, Paperclip, X, Pin } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { Attachment, useStore } from '../../store/useStore';
+import { COMMANDS } from '../../lib/commands';
 
 interface ChatInputProps {
   onSend: (content: string, attachments: Attachment[]) => void;
@@ -64,41 +65,15 @@ export function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
             setInput('');
             return;
         }
-        
-        if (command === '/summarize') {
-            onSend(`Hãy tóm tắt cuộc trò chuyện hiện tại một cách ngắn gọn.`, attachments);
+
+        const cmd = COMMANDS.find(c => c.name === command.slice(1));
+        if (cmd) {
+          const prompt = cmd.handler(arg);
+          if (prompt) {
+            onSend(prompt, attachments);
             setInput('');
             return;
-        }
-
-        if (command === '/code') {
-            onSend(`Hãy đóng vai một chuyên gia lập trình ${arg}. Chỉ trả lời bằng source code, không giải thích.`, attachments);
-            setInput('');
-            return;
-        }
-
-        if (command === '/search') {
-            onSend(`Hãy dùng công cụ tìm kiếm web để tìm thông tin về: ${arg}`, attachments);
-            setInput('');
-            return;
-        }
-
-        if (command === '/memory') {
-            onSend(`Tìm kiếm trong bộ nhớ hệ thống (Smart Memory) về: ${arg}`, attachments);
-            setInput('');
-            return;
-        }
-
-        if (command === '/workflow') {
-            if (arg === 'paper') {
-               onSend(`[WORKFLOW_TRIGGER] Thực hiện quy trình xử lý văn bản đa bước: 
-1. Đọc và phân tích kỹ nội dung tài liệu.
-2. Dịch toàn bộ nội dung sang tiếng Việt một cách tự nhiên.
-3. Tóm tắt 5 điểm cốt lõi nhất.
-4. Trình bày các điểm cốt lõi dưới dạng flashcards để dễ ôn tập.`, attachments);
-               setInput('');
-               return;
-            }
+          }
         }
     }
 
