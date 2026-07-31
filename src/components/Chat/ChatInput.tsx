@@ -17,6 +17,15 @@ export function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    setIsTouchDevice(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -82,7 +91,14 @@ export function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
     setAttachments([]);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Trên thiết bị cảm ứng, phím Enter của bàn phím ảo dùng để xuống dòng.
+    // Muốn gửi thì phải bấm nút gửi.
+    if (isTouchDevice) return;
+
+    // Enter khi đang gõ tiếng Việt (IME/telex) là để chốt từ, không phải để gửi.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -282,6 +298,7 @@ export function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
+          enterKeyHint={isTouchDevice ? 'enter' : 'send'}
           placeholder="Nhắn tin cho Tawa Chat... 🌸"
           className="min-h-[56px] w-full resize-none border-0 bg-transparent py-4 pl-14 pr-12 focus-visible:ring-0 focus-visible:ring-offset-0 text-pink-900 dark:text-pink-100 placeholder:text-pink-300 dark:placeholder:text-pink-700"
           rows={1}

@@ -666,7 +666,34 @@ export function ChatArea({ onOpenSidebar }: ChatAreaProps) {
           )}
         </div>
       </header>
-      
+
+      <div className="flex md:hidden items-center justify-center px-4 py-2 border-b border-pink-200 dark:border-pink-900/30 bg-white/50 dark:bg-zinc-950/50">
+        <div className="flex bg-pink-100/50 dark:bg-pink-900/20 p-1 rounded-lg border border-pink-200 dark:border-pink-800/30">
+          <button
+            onClick={() => store.setActiveMode('performance')}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+              store.activeMode === 'performance'
+                ? 'bg-white dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 shadow-sm shadow-pink-200/50 dark:shadow-none'
+                : 'text-pink-400 dark:text-pink-500/70'
+            }`}
+          >
+            <Zap className="h-4 w-4" />
+            Nhanh nhẹn ⚡
+          </button>
+          <button
+            onClick={() => store.setActiveMode('reasoning')}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+              store.activeMode === 'reasoning'
+                ? 'bg-white dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 shadow-sm shadow-pink-200/50 dark:shadow-none'
+                : 'text-pink-400 dark:text-pink-500/70'
+            }`}
+          >
+            <Brain className="h-4 w-4" />
+            Thông thái 🧠
+          </button>
+        </div>
+      </div>
+
       <div className="hidden md:flex h-14 items-center justify-between px-6 border-b border-pink-200 dark:border-pink-900/30 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm z-10">
         <div className="flex items-center gap-2">
           <div className="flex bg-pink-100/50 dark:bg-pink-900/20 p-1 rounded-lg border border-pink-200 dark:border-pink-800/30">
