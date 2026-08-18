@@ -55,9 +55,9 @@ export const CodeBlock = React.memo(({ language, codeString, onGenerateTests, ..
 
   return (
     <div className="relative group/code my-4 rounded-lg overflow-hidden bg-zinc-950">
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-b border-zinc-800">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-zinc-900 border-b border-zinc-800">
         <span className="text-xs text-zinc-400 font-mono">{language}</span>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-2">
           {(language === 'html' || language === 'css' || language === 'javascript' || language === 'js') && (
             <button 
               onClick={() => useStore.getState().openCanvas(codeString)}
