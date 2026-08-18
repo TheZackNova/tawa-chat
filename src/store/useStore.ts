@@ -337,13 +337,17 @@ export const useStore = create<AppState>()(immer((set, get) => ({
         topK: state.topK,
         pinnedAttachments: state.pinnedAttachments,
         currentModel: state.currentModel,
+        models: state.models,
       };
       
       debouncedSaveSettings(dataToSave, state.pin);
     }
   },
 
-  setModels: (models) => set({ models }),
+  setModels: (models) => {
+    set({ models });
+    get().setSettings({}); // Trigger save
+  },
   setCurrentModel: (currentModel) => {
     set({ currentModel });
     get().setSettings({}); // Trigger save

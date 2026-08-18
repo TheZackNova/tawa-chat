@@ -34,24 +34,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      setApiKey(store.apiKey);
-      setProxyUrl(store.proxyUrl);
-      setPersonality(store.personality);
-      setCurrentModel(store.currentModel);
-      setTranslationEnabled(store.translationEnabled);
-      setSmartMemoryEnabled(store.smartMemoryEnabled);
-      setStreamingEnabled(store.streamingEnabled);
-      setGithubToken(store.githubToken);
-      setPerformanceModel(store.performanceModel);
-      setReasoningModel(store.reasoningModel);
-      setMaxContextTokens(store.maxContextTokens || 60000);
-      setMaxResponseLength(store.maxResponseLength || 8192);
-      setTemperature(store.temperature ?? 0.7);
-      setTopP(store.topP ?? 0.95);
-      setTopK(store.topK ?? 40);
-    }
-  }, [isOpen, store]);
+    if (!isOpen) return;
+    const s = useStore.getState();
+    setApiKey(s.apiKey);
+    setProxyUrl(s.proxyUrl);
+    setPersonality(s.personality);
+    setCurrentModel(s.currentModel);
+    setTranslationEnabled(s.translationEnabled);
+    setSmartMemoryEnabled(s.smartMemoryEnabled);
+    setStreamingEnabled(s.streamingEnabled);
+    setGithubToken(s.githubToken);
+    setPerformanceModel(s.performanceModel);
+    setReasoningModel(s.reasoningModel);
+    setMaxContextTokens(s.maxContextTokens || 60000);
+    setMaxResponseLength(s.maxResponseLength || 8192);
+    setTemperature(s.temperature ?? 0.7);
+    setTopP(s.topP ?? 0.95);
+    setTopK(s.topK ?? 40);
+  }, [isOpen]);
 
   const handleSave = () => {
     store.setSettings({
@@ -68,9 +68,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       maxResponseLength,
       temperature,
       topP,
-      topK
+      topK,
+      currentModel
     });
-    store.setCurrentModel(currentModel);
     
     onClose();
   };
